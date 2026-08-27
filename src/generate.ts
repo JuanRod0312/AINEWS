@@ -38,6 +38,7 @@ export function buildEpisodeRequest(
     periodStart: formatLocalDate(periodStart),
     periodEnd: date,
     audience: config.episode.audience,
+    minimumWords: config.episode.minimumMinutes * config.episode.wordsPerMinute,
     maximumWords: config.episode.maximumMinutes * config.episode.wordsPerMinute,
     clusters: selected
   };

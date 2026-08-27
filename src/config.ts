@@ -8,10 +8,13 @@ const configSchema = z.object({
   outputDirectory: z.string().min(1),
   episode: z.object({
     cadence: z.enum(["weekly", "biweekly"]),
+    minimumMinutes: z.number().positive().min(5).max(10),
     maximumMinutes: z.number().positive().max(10),
     maximumMainStories: z.number().int().positive(),
     wordsPerMinute: z.number().int().positive(),
     audience: z.string().min(1)
+  }).refine((episode) => episode.minimumMinutes <= episode.maximumMinutes, {
+    message: "minimumMinutes must not exceed maximumMinutes"
   }),
   model: z.object({
     provider: z.string().min(1),

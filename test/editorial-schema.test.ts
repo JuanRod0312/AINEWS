@@ -8,6 +8,7 @@ const request: EpisodeRequest = {
   periodStart: "2026-08-19",
   periodEnd: "2026-08-26",
   audience: "engineering students",
+  minimumWords: 1,
   maximumWords: 100,
   clusters: [{
     id: 7,
@@ -64,4 +65,11 @@ test("unknown source IDs fail validation", () => {
 test("missing clusters fail validation", () => {
   const invalid = { ...validDraft, stories: [] };
   assert.throws(() => validateAndRenderEpisode(invalid, request), /each selected cluster/);
+});
+
+test("scripts below the minimum spoken word count fail validation", () => {
+  assert.throws(
+    () => validateAndRenderEpisode(validDraft, { ...request, minimumWords: 100 }),
+    /minimum is 100/
+  );
 });

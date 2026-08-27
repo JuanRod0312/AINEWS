@@ -19,34 +19,52 @@ export class StoryStore {
         url TEXT NOT NULL UNIQUE,
         published_at TEXT NOT NULL,
         summary TEXT NOT NULL,
+        content TEXT NOT NULL DEFAULT '',
         categories TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'pending',
         score INTEGER NOT NULL,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    const columns = this.db.prepare("PRAGMA table_info(stories)").all() as Array<Record<string, unknown>>;
+    if (!columns.some((column) => column.name === "content")) {
+      this.db.exec("ALTER TABLE stories ADD COLUMN content TEXT NOT NULL DEFAULT ''");
+    }
   }
 
-  ingest(stories: StoryInput[]): { inserted: number; skipped: number } {
+  ingest(stories: StoryInput[]): { inserted: number; updated: number } {
     const statement = this.db.prepare(`
-      INSERT OR IGNORE INTO stories
-        (source, title, url, published_at, summary, categories, score)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO stories
+        (source, title, url, published_at, summary, content, categories, score)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(url) DO UPDATE SET
+        source = excluded.source,
+        title = excluded.title,
+        published_at = excluded.published_at,
+        summary = excluded.summary,
+        content = excluded.content,
+        categories = excluded.categories,
+        score = excluded.score
     `);
+    const exists = this.db.prepare("SELECT 1 FROM stories WHERE url = ?");
     let inserted = 0;
+    let updated = 0;
     for (const story of stories) {
-      const result = statement.run(
+      const alreadyExists = Boolean(exists.get(story.url));
+      statement.run(
         story.source,
         story.title,
         story.url,
         story.publishedAt,
         story.summary,
+        story.content ?? story.summary,
         JSON.stringify(story.categories),
         scoreStory(story)
       );
-      inserted += Number(result.changes);
+      if (alreadyExists) updated += 1;
+      else inserted += 1;
     }
-    return { inserted, skipped: stories.length - inserted };
+    return { inserted, updated };
   }
 
   list(status?: Story["status"]): Story[] {
@@ -83,9 +101,9 @@ function mapRow(row: Record<string, unknown>): Story {
     url: String(row.url),
     publishedAt: String(row.published_at),
     summary: String(row.summary),
+    content: String(row.content || row.summary),
     categories: JSON.parse(String(row.categories)) as string[],
     status: String(row.status) as Story["status"],
     score: Number(row.score)
   };
 }
-

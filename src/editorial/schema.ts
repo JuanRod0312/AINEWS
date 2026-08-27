@@ -79,6 +79,9 @@ export function validateAndRenderEpisode(raw: unknown, request: EpisodeRequest):
 
   const script = renderScript(draft, request);
   const spokenWords = draftWords(draft);
+  if (spokenWords < request.minimumWords) {
+    throw new Error(`Generated script has ${spokenWords} spoken words; minimum is ${request.minimumWords}.`);
+  }
   if (spokenWords > request.maximumWords) {
     throw new Error(`Generated script has ${spokenWords} spoken words; maximum is ${request.maximumWords}.`);
   }

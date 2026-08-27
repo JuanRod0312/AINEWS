@@ -10,6 +10,7 @@ const fixtureSchema = z.object({
     url: z.url(),
     publishedAt: z.iso.datetime(),
     summary: z.string(),
+    content: z.string().optional(),
     categories: z.array(z.string())
   }))
 });
@@ -44,14 +45,17 @@ async function fetchFeed(source: SourceConfig): Promise<StoryInput[]> {
     const url = getLink(item);
     const title = textValue(item.title);
     if (!url || !title) return [];
+    const summary = stripMarkup(textValue(item.description ?? item.summary ?? item.content));
+    const content = stripMarkup(textValue(
+      item["content:encoded"] ?? item.content ?? item.description ?? item.summary
+    ));
     return [{
       source: source.name,
       title,
       url,
       publishedAt: normalizeDate(item.pubDate ?? item.published ?? item.updated ?? item["dc:date"]),
-      summary: stripMarkup(textValue(
-        item.description ?? item.summary ?? item.content ?? item["content:encoded"]
-      )),
+      summary,
+      content: content || summary,
       categories: [source.category]
     }];
   });

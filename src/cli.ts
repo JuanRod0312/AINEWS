@@ -33,7 +33,7 @@ async function main(): Promise<void> {
           ? await ingestFixture(values.fixture)
           : await ingestSources(config.sources, lookbackDate(config.episode.cadence));
         const result = store.ingest(stories);
-        console.log(`Ingested ${result.inserted}; skipped ${result.skipped} duplicate(s).`);
+        console.log(`Ingested ${result.inserted}; refreshed ${result.updated} existing stor${result.updated === 1 ? "y" : "ies"}.`);
         break;
       }
       case "review": {
@@ -124,7 +124,7 @@ function printGenerationPreview(
   console.log(`  Provider: ${config.model.provider}`);
   console.log(`  Model: ${config.model.model}`);
   console.log(`  Period: ${request.periodStart} through ${request.periodEnd}`);
-  console.log(`  Maximum: ${request.maximumWords} words (~${config.episode.maximumMinutes} minutes)`);
+  console.log(`  Target: ${request.minimumWords}-${request.maximumWords} words (~${config.episode.minimumMinutes}-${config.episode.maximumMinutes} minutes)`);
   console.log(`  Clusters: ${request.clusters.length}`);
   for (const cluster of request.clusters) {
     console.log(`    [${cluster.id}] ${cluster.title} (${cluster.stories.length} source article(s))`);

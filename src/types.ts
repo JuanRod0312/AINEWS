@@ -12,6 +12,7 @@ export interface AppConfig {
   outputDirectory: string;
   episode: {
     cadence: Cadence;
+    minimumMinutes: number;
     maximumMinutes: number;
     maximumMainStories: number;
     wordsPerMinute: number;
@@ -30,6 +31,7 @@ export interface StoryInput {
   url: string;
   publishedAt: string;
   summary: string;
+  content?: string;
   categories: string[];
 }
 
@@ -54,6 +56,7 @@ export interface EpisodeRequest {
   periodStart: string;
   periodEnd: string;
   audience: string;
+  minimumWords: number;
   maximumWords: number;
   clusters: StoryCluster[];
 }

@@ -3,6 +3,7 @@
   "outputDirectory": "output",
   "episode": {
     "cadence": "weekly",
+    "minimumMinutes": 5,
     "maximumMinutes": 10,
     "maximumMainStories": 4,
     "wordsPerMinute": 130,

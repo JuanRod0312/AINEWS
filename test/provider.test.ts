@@ -9,6 +9,7 @@ test("template provider creates two-host script and sourced notes", async () => 
     periodStart: "2026-08-17",
     periodEnd: "2026-08-24",
     audience: "engineering students",
+    minimumWords: 1,
     maximumWords: 500,
     clusters: [{
       id: 1,
