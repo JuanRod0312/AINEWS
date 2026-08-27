@@ -25,4 +25,4 @@ The ingestion layer keeps both the short feed summary and the richer content bod
 
 ## Model selection
 
-`config/editorial.json` currently selects the stable `gemini-3.6-flash` model. Change the model string in that file to test another compatible Gemini model without modifying the adapter.
+`config/editorial.json` currently selects the stable `gemini-2.5-flash` fallback after newer Flash models returned repeated high-demand errors. Change the model string in that file to test another compatible Gemini model without modifying the adapter.

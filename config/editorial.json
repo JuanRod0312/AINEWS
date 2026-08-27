@@ -3,6 +3,6 @@
   "databasePath": "data/editorial.db",
   "model": {
     "provider": "gemini",
-    "model": "gemini-3.6-flash"
+    "model": "gemini-2.5-flash"
   }
 }

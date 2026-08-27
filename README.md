@@ -39,7 +39,7 @@ Use `npm run dev --` without a command to view CLI help.
 
 ## Gemini editorial workflow
 
-`config/editorial.json` inherits the default feeds and episode settings, uses a separate `data/editorial.db`, and selects Gemini 3.6 Flash. Ingest and review without needing an API key:
+`config/editorial.json` inherits the default feeds and episode settings, uses a separate `data/editorial.db`, and selects Gemini 2.5 Flash. Ingest and review without needing an API key:
 
 ```bash
 npm run dev -- ingest --config config/editorial.json
