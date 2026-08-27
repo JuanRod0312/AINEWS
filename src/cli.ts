@@ -27,13 +27,19 @@ async function main(): Promise<void> {
       case "ingest": {
         const stories = values.fixture
           ? await ingestFixture(values.fixture)
-          : await ingestSources(config.sources);
+          : await ingestSources(config.sources, lookbackDate(config.episode.cadence));
         const result = store.ingest(stories);
         console.log(`Ingested ${result.inserted}; skipped ${result.skipped} duplicate(s).`);
         break;
       }
       case "review": {
         printStories(store.list(asStatus(values.status) ?? "pending"));
+        break;
+      }
+      case "sources": {
+        for (const source of config.sources) {
+          console.log(`${source.enabled ? "enabled " : "disabled"}  ${source.name}  ${source.url}`);
+        }
         break;
       }
       case "approve":
@@ -89,11 +95,16 @@ function printStories(stories: Story[]): void {
 }
 
 function printHelp(): void {
-  console.log(`AI Engineering Briefing\n\nCommands:\n  ingest [--fixture path]\n  review [--status pending|approved|rejected]\n  approve --ids 1,2\n  reject --ids 3,4\n  generate\n\nOptions:\n  --config path   Configuration file (default: config/default.json)`);
+  console.log(`AI Engineering Briefing\n\nCommands:\n  sources\n  ingest [--fixture path]\n  review [--status pending|approved|rejected]\n  approve --ids 1,2\n  reject --ids 3,4\n  generate\n\nOptions:\n  --config path   Configuration file (default: config/default.json)`);
+}
+
+function lookbackDate(cadence: "weekly" | "biweekly"): Date {
+  const date = new Date();
+  date.setDate(date.getDate() - (cadence === "biweekly" ? 14 : 7));
+  return date;
 }
 
 main().catch((error: unknown) => {
   console.error(error instanceof Error ? error.message : error);
   process.exitCode = 1;
 });
-

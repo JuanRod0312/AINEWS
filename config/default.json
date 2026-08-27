@@ -12,6 +12,66 @@
     "provider": "template",
     "model": "local-template-v1"
   },
-  "sources": []
+  "sources": [
+    {
+      "name": "Simon Willison's Weblog",
+      "url": "https://simonwillison.net/atom/entries/",
+      "category": "engineering",
+      "enabled": true
+    },
+    {
+      "name": "Last Week in AI",
+      "url": "https://rss.art19.com/last-week-in-ai",
+      "category": "general-ai-news",
+      "enabled": true
+    },
+    {
+      "name": "Latent Space",
+      "url": "https://www.latent.space/feed",
+      "category": "ai-engineering",
+      "enabled": true
+    },
+    {
+      "name": "Import AI",
+      "url": "https://importai.substack.com/feed",
+      "category": "research-policy",
+      "enabled": true
+    },
+    {
+      "name": "AlphaSignal",
+      "url": "https://alphasignalai.substack.com/feed",
+      "category": "research-tools",
+      "enabled": true
+    },
+    {
+      "name": "Practical AI",
+      "url": "https://feeds.transistor.fm/practical-ai-machine-learning-data-science-llm",
+      "category": "applied-ai",
+      "enabled": true
+    },
+    {
+      "name": "The TWIML AI Podcast",
+      "url": "https://twimlai.com/feed/podcast/",
+      "category": "machine-learning",
+      "enabled": true
+    },
+    {
+      "name": "Ben's Bites",
+      "url": "https://www.bensbites.com/feed",
+      "category": "tools-products",
+      "enabled": true
+    },
+    {
+      "name": "AI Explained",
+      "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCNJ1Ymd5yFuUPtn21xtRbbw",
+      "category": "model-analysis",
+      "enabled": true
+    },
+    {
+      "name": "Product Hunt",
+      "url": "https://www.producthunt.com/feed",
+      "category": "product-discovery",
+      "enabled": false
+    }
+  ]
 }
-

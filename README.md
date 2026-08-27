@@ -37,9 +37,23 @@ Generated files are written to a dated directory under `output/`:
 
 Use `npm run dev --` without a command to view CLI help.
 
-## Add feeds
+## Live feeds
 
-Copy entries from `config/sources.example.json` into the `sources` array in `config/default.json`, confirm the publisher's current feed URL and usage terms, and set `enabled` to `true`.
+The default configuration includes verified public feeds for Simon Willison, Last Week in AI, Latent Space, Import AI, AlphaSignal, Practical AI, TWIML AI, Ben's Bites, AI Explained, and Product Hunt. View their status with:
+
+```bash
+npm run dev -- sources
+```
+
+Running `ingest` without `--fixture` fetches entries from enabled feeds inside the configured weekly or biweekly lookback window:
+
+```bash
+npm run dev -- ingest
+```
+
+TLDR AI is not configured because its current public website does not expose an accessible RSS/Atom endpoint. It will require a dedicated archive or email connector. Product Hunt is configured but disabled because its official feed covers all products rather than only its AI topic. It will be enabled after an AI-topic filter is added.
+
+To add another source, copy an entry from `config/sources.example.json`, verify the publisher's current feed URL and usage terms, and set `enabled` to `true`.
 
 ## Configuration
 
@@ -47,8 +61,7 @@ Copy entries from `config/sources.example.json` into the `sources` array in `con
 
 ## Current boundaries
 
-- RSS and Atom only; podcast transcription and YouTube captions come later.
+- RSS and Atom metadata only; podcast transcription and YouTube captions come later.
 - Manual selection is required before generation.
 - Ranking is an explainable baseline, not yet cross-source clustering.
 - The template provider produces a structural draft. A model-backed provider will provide the polished conversational script.
-

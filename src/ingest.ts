@@ -18,7 +18,10 @@ export async function ingestFixture(path: string): Promise<StoryInput[]> {
   return fixtureSchema.parse(JSON.parse(await readFile(path, "utf8"))).stories;
 }
 
-export async function ingestSources(sources: SourceConfig[]): Promise<StoryInput[]> {
+export async function ingestSources(
+  sources: SourceConfig[],
+  publishedSince?: Date
+): Promise<StoryInput[]> {
   const enabled = sources.filter((source) => source.enabled);
   const results = await Promise.allSettled(enabled.map(fetchFeed));
   const stories: StoryInput[] = [];
@@ -26,7 +29,8 @@ export async function ingestSources(sources: SourceConfig[]): Promise<StoryInput
     if (result.status === "fulfilled") stories.push(...result.value);
     else console.error(`Feed failed: ${String(result.reason)}`);
   }
-  return stories;
+  if (!publishedSince) return stories;
+  return stories.filter((story) => new Date(story.publishedAt) >= publishedSince);
 }
 
 async function fetchFeed(source: SourceConfig): Promise<StoryInput[]> {
@@ -44,8 +48,10 @@ async function fetchFeed(source: SourceConfig): Promise<StoryInput[]> {
       source: source.name,
       title,
       url,
-      publishedAt: normalizeDate(item.pubDate ?? item.published ?? item.updated),
-      summary: stripMarkup(textValue(item.description ?? item.summary ?? item.content)),
+      publishedAt: normalizeDate(item.pubDate ?? item.published ?? item.updated ?? item["dc:date"]),
+      summary: stripMarkup(textValue(
+        item.description ?? item.summary ?? item.content ?? item["content:encoded"]
+      )),
       categories: [source.category]
     }];
   });
@@ -78,4 +84,3 @@ function normalizeDate(value: unknown): string {
 function stripMarkup(value: string): string {
   return value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
-
