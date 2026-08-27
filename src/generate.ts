@@ -1,28 +1,28 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { AppConfig, Story } from "./types.js";
+import type { AppConfig, StoryCluster } from "./types.js";
 import type { LanguageModelProvider } from "./providers/provider.js";
 
 export async function generateEpisode(
   config: AppConfig,
   provider: LanguageModelProvider,
-  stories: Story[],
+  clusters: StoryCluster[],
   periodEnd = new Date()
 ): Promise<string> {
-  if (stories.length === 0) throw new Error("No approved stories. Approve stories before generating.");
+  if (clusters.length === 0) throw new Error("No approved story clusters. Approve clusters before generating.");
   const days = config.episode.cadence === "biweekly" ? 14 : 7;
   const periodStart = new Date(periodEnd);
   periodStart.setDate(periodStart.getDate() - days);
   const date = formatLocalDate(periodEnd);
   const directory = join(config.outputDirectory, `${date}-${config.episode.cadence}`);
-  const selected = stories.slice(0, config.episode.maximumMainStories);
+  const selected = clusters.slice(0, config.episode.maximumMainStories);
   const result = await provider.generateEpisode({
     title: "AI Engineering Briefing",
     periodStart: formatLocalDate(periodStart),
     periodEnd: date,
     audience: config.episode.audience,
     maximumWords: config.episode.maximumMinutes * config.episode.wordsPerMinute,
-    stories: selected
+    clusters: selected
   });
   await mkdir(directory, { recursive: true });
   await Promise.all([

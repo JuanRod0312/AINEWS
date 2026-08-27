@@ -39,17 +39,26 @@ export interface Story extends StoryInput {
   score: number;
 }
 
+export interface StoryCluster {
+  id: number;
+  title: string;
+  summary: string;
+  categories: string[];
+  status: Story["status"];
+  score: number;
+  stories: Story[];
+}
+
 export interface EpisodeRequest {
   title: string;
   periodStart: string;
   periodEnd: string;
   audience: string;
   maximumWords: number;
-  stories: Story[];
+  clusters: StoryCluster[];
 }
 
 export interface GeneratedEpisode {
   script: string;
   showNotes: string;
 }
-

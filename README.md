@@ -5,8 +5,8 @@ A provider-agnostic CLI pipeline that turns curated AI news into a source-ground
 ## MVP workflow
 
 1. Ingest RSS/Atom feeds or a local fixture.
-2. Rank and review candidate stories.
-3. Manually approve or reject stories.
+2. Cluster related coverage and rank developments using learning value and source diversity.
+3. Manually approve or reject story clusters.
 4. Generate a script of no more than ten minutes plus show notes and source metadata.
 
 The bundled `template` provider makes the workflow testable without an API key. Future model integrations implement the interface in `src/providers/provider.ts`.
@@ -53,6 +53,8 @@ npm run dev -- ingest
 
 TLDR AI is not configured because its current public website does not expose an accessible RSS/Atom endpoint. It will require a dedicated archive or email connector. Product Hunt is configured but disabled because its official feed covers all products rather than only its AI topic. It will be enabled after an AI-topic filter is added.
 
+Entries from disabled configured sources remain in SQLite for provenance but are hidden from review and generation.
+
 To add another source, copy an entry from `config/sources.example.json`, verify the publisher's current feed URL and usage terms, and set `enabled` to `true`.
 
 ## Configuration
@@ -63,5 +65,5 @@ To add another source, copy an entry from `config/sources.example.json`, verify 
 
 - RSS and Atom metadata only; podcast transcription and YouTube captions come later.
 - Manual selection is required before generation.
-- Ranking is an explainable baseline, not yet cross-source clustering.
+- Clustering is deterministic title similarity; semantic model-assisted clustering can be added later.
 - The template provider produces a structural draft. A model-backed provider will provide the polished conversational script.
