@@ -1,0 +1,16 @@
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+node_modules
+dist
+data
+output
+coverage
+.DS_Store
+*.log
+*.db
+*.db-shm
+*.db-wal
+

@@ -1,0 +1,25 @@
+services:
+  ainews:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ainews-lab-briefing:local
+    init: true
+    read_only: true
+    user: "node"
+    environment:
+      GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
+    volumes:
+      - ./config:/app/config:ro
+      - ./fixtures:/app/fixtures:ro
+      - ./data:/app/data
+      - ./output:/app/output
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stdin_open: true
+    tty: true
+

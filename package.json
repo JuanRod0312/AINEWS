@@ -9,6 +9,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "docker:build": "docker compose build ainews",
+    "docker:smoke": "docker compose run --rm ainews sources --config config/editorial.json",
     "dev": "node --disable-warning=ExperimentalWarning --import tsx src/cli.ts",
     "start": "node --disable-warning=ExperimentalWarning dist/src/cli.js",
     "test": "node --import tsx --test test/**/*.test.ts",
