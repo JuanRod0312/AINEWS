@@ -37,6 +37,25 @@ Generated files are written to a dated directory under `output/`:
 
 Use `npm run dev --` without a command to view CLI help.
 
+## Gemini editorial workflow
+
+`config/editorial.json` inherits the default feeds and episode settings, uses a separate `data/editorial.db`, and selects Gemini 3.7 Flash. Ingest and review without needing an API key:
+
+```bash
+npm run dev -- ingest --config config/editorial.json
+npm run dev -- review --config config/editorial.json
+npm run dev -- approve --ids 1,2 --config config/editorial.json
+npm run dev -- generate --draft --config config/editorial.json
+```
+
+The draft command prints the exact provider, model, period, word limit, and selected clusters without calling Gemini. When ready for a live request, copy `.env.example` to `.env`, set `GEMINI_API_KEY`, and run:
+
+```bash
+npm run dev -- generate --config config/editorial.json
+```
+
+The CLI asks for confirmation before sending source material to Gemini. Pass `--yes` only in an intentional non-interactive run.
+
 ## Live feeds
 
 The default configuration includes verified public feeds for Simon Willison, Last Week in AI, Latent Space, Import AI, AlphaSignal, Practical AI, TWIML AI, Ben's Bites, AI Explained, and Product Hunt. View their status with:
@@ -66,4 +85,4 @@ To add another source, copy an entry from `config/sources.example.json`, verify 
 - RSS and Atom metadata only; podcast transcription and YouTube captions come later.
 - Manual selection is required before generation.
 - Clustering is deterministic title similarity; semantic model-assisted clustering can be added later.
-- The template provider produces a structural draft. A model-backed provider will provide the polished conversational script.
+- The Gemini provider uses structured output and validates cluster coverage, source IDs, both-host participation, and spoken word count before writing files.

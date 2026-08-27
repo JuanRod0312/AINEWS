@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
 import { z } from "zod";
 import type { AppConfig } from "./types.js";
 
@@ -25,7 +26,29 @@ const configSchema = z.object({
 });
 
 export async function loadConfig(path = "config/default.json"): Promise<AppConfig> {
-  const contents = await readFile(path, "utf8");
-  return configSchema.parse(JSON.parse(contents));
+  return configSchema.parse(await loadConfigObject(resolve(path), new Set()));
 }
 
+async function loadConfigObject(path: string, visited: Set<string>): Promise<Record<string, unknown>> {
+  if (visited.has(path)) throw new Error(`Circular configuration inheritance involving ${path}`);
+  visited.add(path);
+  const current = JSON.parse(await readFile(path, "utf8")) as Record<string, unknown>;
+  const parentPath = current.extends;
+  delete current.extends;
+  if (typeof parentPath !== "string") return current;
+  const parent = await loadConfigObject(resolve(dirname(path), parentPath), visited);
+  return mergeObjects(parent, current);
+}
+
+function mergeObjects(base: Record<string, unknown>, override: Record<string, unknown>): Record<string, unknown> {
+  const merged = { ...base };
+  for (const [key, value] of Object.entries(override)) {
+    const existing = merged[key];
+    merged[key] = isObject(existing) && isObject(value) ? mergeObjects(existing, value) : value;
+  }
+  return merged;
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}

@@ -1,0 +1,9 @@
+{
+  "extends": "./default.json",
+  "databasePath": "data/editorial.db",
+  "model": {
+    "provider": "gemini",
+    "model": "gemini-3.7-flash"
+  }
+}
+

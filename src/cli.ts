@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 import { parseArgs } from "node:util";
+import { createInterface } from "node:readline/promises";
 import { loadConfig } from "./config.js";
 import { clusterStories } from "./clustering.js";
 import { StoryStore } from "./database.js";
-import { generateEpisode } from "./generate.js";
+import { buildEpisodeRequest, generateEpisode } from "./generate.js";
 import { ingestFixture, ingestSources } from "./ingest.js";
 import { createProvider } from "./providers/index.js";
 import type { Story, StoryCluster } from "./types.js";
@@ -17,7 +18,9 @@ async function main(): Promise<void> {
       config: { type: "string", default: "config/default.json" },
       fixture: { type: "string" },
       status: { type: "string" },
-      ids: { type: "string" }
+      ids: { type: "string" },
+      draft: { type: "boolean", default: false },
+      yes: { type: "boolean", short: "y", default: false }
     },
     strict: true
   });
@@ -56,10 +59,18 @@ async function main(): Promise<void> {
         break;
       }
       case "generate": {
+        const approved = clusterStories(visibleStories(store.list("approved"), config));
+        const request = buildEpisodeRequest(config, approved);
+        printGenerationPreview(config, request);
+        if (values.draft) {
+          console.log("Draft preview only; no model request was made.");
+          break;
+        }
+        if (!values.yes && config.model.provider !== "template") await confirmGeneration();
         const directory = await generateEpisode(
           config,
-          createProvider(config.model.provider),
-          clusterStories(visibleStories(store.list("approved"), config))
+          createProvider(config.model.provider, config.model.model),
+          approved
         );
         console.log(`Episode written to ${directory}`);
         break;
@@ -102,7 +113,34 @@ function printClusters(clusters: StoryCluster[]): void {
 }
 
 function printHelp(): void {
-  console.log(`AI Engineering Briefing\n\nCommands:\n  sources\n  ingest [--fixture path]\n  review [--status pending|approved|rejected]\n  approve --ids 1,2       Approve cluster IDs\n  reject --ids 3,4        Reject cluster IDs\n  generate\n\nOptions:\n  --config path   Configuration file (default: config/default.json)`);
+  console.log(`AI Engineering Briefing\n\nCommands:\n  sources\n  ingest [--fixture path]\n  review [--status pending|approved|rejected]\n  approve --ids 1,2       Approve cluster IDs\n  reject --ids 3,4        Reject cluster IDs\n  generate [--draft] [-y]\n\nOptions:\n  --config path   Configuration file (default: config/default.json)\n  --draft         Preview generation without calling a model\n  --yes, -y       Skip confirmation before a paid model request`);
+}
+
+function printGenerationPreview(
+  config: Awaited<ReturnType<typeof loadConfig>>,
+  request: ReturnType<typeof buildEpisodeRequest>
+): void {
+  console.log("\nGeneration preview");
+  console.log(`  Provider: ${config.model.provider}`);
+  console.log(`  Model: ${config.model.model}`);
+  console.log(`  Period: ${request.periodStart} through ${request.periodEnd}`);
+  console.log(`  Maximum: ${request.maximumWords} words (~${config.episode.maximumMinutes} minutes)`);
+  console.log(`  Clusters: ${request.clusters.length}`);
+  for (const cluster of request.clusters) {
+    console.log(`    [${cluster.id}] ${cluster.title} (${cluster.stories.length} source article(s))`);
+  }
+  console.log("");
+}
+
+async function confirmGeneration(): Promise<void> {
+  if (!process.stdin.isTTY) throw new Error("Confirmation required. Re-run with --yes to make the model request.");
+  const terminal = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    const answer = await terminal.question("Send this material to the configured model? [y/N] ");
+    if (!/^y(es)?$/i.test(answer.trim())) throw new Error("Generation cancelled.");
+  } finally {
+    terminal.close();
+  }
 }
 
 function lookbackDate(cadence: "weekly" | "biweekly"): Date {
