@@ -1,0 +1,29 @@
+{
+  "stories": [
+    {
+      "source": "Simon Willison's Weblog",
+      "title": "A smaller model improves tool-use reliability",
+      "url": "https://example.edu/stories/tool-use-reliability",
+      "publishedAt": "2026-08-24T14:00:00.000Z",
+      "summary": "A new evaluation shows that careful tool interfaces can matter more than raw model size for agent reliability.",
+      "categories": ["agents", "evaluation", "engineering"]
+    },
+    {
+      "source": "Import AI",
+      "title": "Researchers propose a clearer standard for agent evaluations",
+      "url": "https://example.edu/stories/agent-evaluation-standard",
+      "publishedAt": "2026-08-23T14:00:00.000Z",
+      "summary": "The proposed standard separates planning ability, tool errors, and environmental failures instead of reporting one aggregate score.",
+      "categories": ["research", "evaluation"]
+    },
+    {
+      "source": "TLDR AI",
+      "title": "Open robotics dataset targets manipulation tasks",
+      "url": "https://example.edu/stories/robotics-dataset",
+      "publishedAt": "2026-08-22T14:00:00.000Z",
+      "summary": "A newly released dataset provides demonstrations and evaluation tasks for robotic manipulation research.",
+      "categories": ["robotics", "datasets"]
+    }
+  ]
+}
+

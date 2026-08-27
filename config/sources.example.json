@@ -1,0 +1,11 @@
+{
+  "sources": [
+    {
+      "name": "Example AI Feed",
+      "url": "https://example.com/feed.xml",
+      "category": "engineering",
+      "enabled": false
+    }
+  ]
+}
+

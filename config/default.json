@@ -1,0 +1,17 @@
+{
+  "databasePath": "data/ainews.db",
+  "outputDirectory": "output",
+  "episode": {
+    "cadence": "weekly",
+    "maximumMinutes": 10,
+    "maximumMainStories": 4,
+    "wordsPerMinute": 130,
+    "audience": "undergraduate and graduate students in an AI-enabled engineering lab"
+  },
+  "model": {
+    "provider": "template",
+    "model": "local-template-v1"
+  },
+  "sources": []
+}
+

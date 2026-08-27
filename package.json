@@ -1,0 +1,29 @@
+{
+  "name": "ainews-lab-briefing",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A source-grounded, provider-agnostic AI news podcast script pipeline.",
+  "type": "module",
+  "bin": {
+    "ainews": "dist/src/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "node --import tsx src/cli.ts",
+    "start": "node dist/src/cli.js",
+    "test": "node --import tsx --test test/**/*.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "engines": {
+    "node": ">=22.5"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^5.2.5",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
