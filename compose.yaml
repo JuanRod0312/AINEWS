@@ -9,6 +9,7 @@ services:
     user: "node"
     environment:
       GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
+      ELEVENLABS_API_KEY: "${ELEVENLABS_API_KEY:-}"
     volumes:
       - ./config:/app/config:ro
       - ./fixtures:/app/fixtures:ro
@@ -22,4 +23,3 @@ services:
       - ALL
     stdin_open: true
     tty: true
-

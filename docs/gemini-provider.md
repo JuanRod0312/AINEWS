@@ -12,7 +12,9 @@ Gemini returns structured opening dialogue, one segment for every selected story
 
 - every selected cluster appears exactly once;
 - each story segment contains both hosts;
+- each story alternates hosts and includes a question answered by the other host;
 - cited source IDs belong to the relevant cluster;
+- dense identifiers and speech-unfriendly symbols are absent from dialogue;
 - the spoken dialogue stays within the configured word limit;
 - the spoken dialogue reaches the configured five-minute minimum;
 - the returned JSON matches the required schema.

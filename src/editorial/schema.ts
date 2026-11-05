@@ -12,7 +12,7 @@ export const episodeDraftSchema = z.object({
   stories: z.array(z.object({
     clusterId: z.number().int().positive(),
     heading: z.string().min(1),
-    exchanges: z.array(exchangeSchema).min(2)
+    exchanges: z.array(exchangeSchema).min(4).max(8)
   })),
   closing: z.array(exchangeSchema).min(2)
 });
@@ -70,9 +70,26 @@ export function validateAndRenderEpisode(raw: unknown, request: EpisodeRequest):
     const allowedSources = new Set(cluster.stories.map((source) => source.id));
     const hosts = new Set(story.exchanges.map((exchange) => exchange.host));
     if (hosts.size !== 2) throw new Error(`Cluster ${story.clusterId} must include both hosts.`);
+    if (story.exchanges.some((exchange, index) => index > 0 && exchange.host === story.exchanges[index - 1]!.host)) {
+      throw new Error(`Cluster ${story.clusterId} must alternate hosts to create a real conversation.`);
+    }
+    const answeredQuestion = story.exchanges.some((exchange, index) =>
+      exchange.text.includes("?") && index < story.exchanges.length - 1
+      && story.exchanges[index + 1]!.host !== exchange.host
+    );
+    if (!answeredQuestion) throw new Error(`Cluster ${story.clusterId} must include a question answered by the other host.`);
     for (const exchange of story.exchanges) {
       if (exchange.sourceIds.some((id) => !allowedSources.has(id))) {
         throw new Error(`Cluster ${story.clusterId} cited an unknown source ID.`);
+      }
+      if (/%|[<>_=]/.test(exchange.text)) {
+        throw new Error(`Cluster ${story.clusterId} contains speech-unfriendly symbols.`);
+      }
+      if (/\b(?:PPO|ML|GPU|3D)\b/.test(exchange.text)) {
+        throw new Error(`Cluster ${story.clusterId} contains unexplained or speech-unfriendly shorthand.`);
+      }
+      if (/\b[\p{L}\d]+(?:[._-][\p{L}\d]+){2,}(?:['’]s)?\b/u.test(exchange.text)) {
+        throw new Error(`Cluster ${story.clusterId} contains a dense identifier that should be simplified for speech.`);
       }
     }
   }

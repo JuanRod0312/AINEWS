@@ -22,7 +22,21 @@ export interface AppConfig {
     provider: string;
     model: string;
   };
+  audio: {
+    provider: "elevenlabs";
+    model: string;
+    outputFormat: "mp3_44100_128";
+    hostAVoiceId: string;
+    hostBVoiceId: string;
+  };
   sources: SourceConfig[];
+}
+
+export type PodcastHost = "HOST A" | "HOST B";
+
+export interface PodcastTurn {
+  host: PodcastHost;
+  text: string;
 }
 
 export interface StoryInput {

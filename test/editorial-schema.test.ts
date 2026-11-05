@@ -41,7 +41,9 @@ const validDraft = {
     heading: "Atlas evaluation",
     exchanges: [
       { host: "HOST A", text: "Atlas was evaluated.", sourceIds: [11] },
-      { host: "HOST B", text: "The measurement matters.", sourceIds: [11] }
+      { host: "HOST B", text: "What did the evaluation measure?", sourceIds: [11] },
+      { host: "HOST A", text: "It measured the result described by the source.", sourceIds: [11] },
+      { host: "HOST B", text: "That makes the comparison useful.", sourceIds: [11] }
     ]
   }],
   closing: [
@@ -72,4 +74,28 @@ test("scripts below the minimum spoken word count fail validation", () => {
     () => validateAndRenderEpisode(validDraft, { ...request, minimumWords: 100 }),
     /minimum is 100/
   );
+});
+
+test("story dialogue must contain an answered question", () => {
+  const invalid = structuredClone(validDraft);
+  invalid.stories[0]!.exchanges[1]!.text = "The evaluation measured a result.";
+  assert.throws(() => validateAndRenderEpisode(invalid, request), /question answered/);
+});
+
+test("story dialogue must alternate hosts", () => {
+  const invalid = structuredClone(validDraft);
+  invalid.stories[0]!.exchanges[1]!.host = "HOST A";
+  assert.throws(() => validateAndRenderEpisode(invalid, request), /alternate hosts/);
+});
+
+test("speech-unfriendly model identifiers are rejected", () => {
+  const invalid = structuredClone(validDraft);
+  invalid.stories[0]!.exchanges[0]!.text = "Qwen3.5-0.8B's weights changed.";
+  assert.throws(() => validateAndRenderEpisode(invalid, request), /dense identifier/);
+});
+
+test("unexplained technical shorthand is rejected", () => {
+  const invalid = structuredClone(validDraft);
+  invalid.stories[0]!.exchanges[0]!.text = "PPO changed the result.";
+  assert.throws(() => validateAndRenderEpisode(invalid, request), /shorthand/);
 });

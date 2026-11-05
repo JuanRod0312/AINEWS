@@ -15,7 +15,8 @@ export class TemplateProvider implements LanguageModelProvider {
         exchanges: [
           { host: "HOST A" as const, text: `${lead} ${cluster.summary}`, sourceIds },
           { host: "HOST B" as const, text: "What should engineering students take away from this?", sourceIds: [] },
-          { host: "HOST A" as const, text: "The useful question is how this changes what engineers can measure, build, or evaluate. We should treat claims beyond the supplied evidence carefully.", sourceIds }
+          { host: "HOST A" as const, text: "The useful question is how this changes what engineers can measure, build, or evaluate. We should treat claims beyond the supplied evidence carefully.", sourceIds },
+          { host: "HOST B" as const, text: "That distinction gives us a practical way to evaluate the development without overstating it.", sourceIds }
         ]
       };
     });

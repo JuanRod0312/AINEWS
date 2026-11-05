@@ -4,5 +4,9 @@
   "model": {
     "provider": "gemini",
     "model": "gemini-2.5-flash"
+  },
+  "audio": {
+    "hostAVoiceId": "FGY2WhTYpPnrIDTdsKH5",
+    "hostBVoiceId": "cjVigY5qzO86Huf0OWal"
   }
 }

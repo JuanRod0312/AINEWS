@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 import { parseArgs } from "node:util";
 import { createInterface } from "node:readline/promises";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { ElevenLabsClient, podcastPreview, synthesizePodcast } from "./audio.js";
 import { loadConfig } from "./config.js";
 import { clusterStories } from "./clustering.js";
 import { StoryStore } from "./database.js";
@@ -19,6 +22,8 @@ async function main(): Promise<void> {
       fixture: { type: "string" },
       status: { type: "string" },
       ids: { type: "string" },
+      episode: { type: "string" },
+      date: { type: "string" },
       draft: { type: "boolean", default: false },
       yes: { type: "boolean", short: "y", default: false }
     },
@@ -46,6 +51,18 @@ async function main(): Promise<void> {
         }
         break;
       }
+      case "voices": {
+        const voices = await new ElevenLabsClient().listVoices();
+        if (voices.length === 0) {
+          console.log("No ElevenLabs voices are available to this account.");
+          break;
+        }
+        for (const voice of voices) {
+          const description = [voice.labels.gender, voice.labels.accent, voice.labels.use_case].filter(Boolean).join(", ");
+          console.log(`${voice.voiceId}  ${voice.name}  ${voice.category}${description ? `  ${description}` : ""}`);
+        }
+        break;
+      }
       case "approve":
       case "reject": {
         const ids = parseIds(values.ids);
@@ -60,19 +77,41 @@ async function main(): Promise<void> {
       }
       case "generate": {
         const approved = clusterStories(visibleStories(store.list("approved"), config));
-        const request = buildEpisodeRequest(config, approved);
+        const periodEnd = values.date ? parseEpisodeDate(values.date) : new Date();
+        const request = buildEpisodeRequest(config, approved, periodEnd);
         printGenerationPreview(config, request);
         if (values.draft) {
           console.log("Draft preview only; no model request was made.");
           break;
         }
-        if (!values.yes && config.model.provider !== "template") await confirmGeneration();
+        if (!values.yes && config.model.provider !== "template") await confirmPaidRequest("Send this material to the configured model?");
         const directory = await generateEpisode(
           config,
           createProvider(config.model.provider, config.model.model),
-          approved
+          approved,
+          periodEnd
         );
         console.log(`Episode written to ${directory}`);
+        break;
+      }
+      case "synthesize": {
+        const directory = values.episode ?? currentEpisodeDirectory(config);
+        const script = await readFile(join(directory, "script.md"), "utf8");
+        const preview = podcastPreview(script);
+        console.log("\nAudio preview");
+        console.log(`  Episode: ${directory}`);
+        console.log(`  Provider: ${config.audio.provider}`);
+        console.log(`  Model: ${config.audio.model}`);
+        console.log(`  Format: ${config.audio.outputFormat}`);
+        console.log(`  Host A voice: ${config.audio.hostAVoiceId || "not selected"}`);
+        console.log(`  Host B voice: ${config.audio.hostBVoiceId || "not selected"}`);
+        console.log(`  Dialogue: ${preview.turns} turns, ${preview.characters} billable characters\n`);
+        if (values.draft) {
+          console.log("Draft preview only; no ElevenLabs request was made.");
+          break;
+        }
+        if (!values.yes) await confirmPaidRequest("Synthesize this episode with ElevenLabs?");
+        console.log(`Podcast written to ${await synthesizePodcast(config, directory)}`);
         break;
       }
       default:
@@ -113,7 +152,7 @@ function printClusters(clusters: StoryCluster[]): void {
 }
 
 function printHelp(): void {
-  console.log(`AI Engineering Briefing\n\nCommands:\n  sources\n  ingest [--fixture path]\n  review [--status pending|approved|rejected]\n  approve --ids 1,2       Approve cluster IDs\n  reject --ids 3,4        Reject cluster IDs\n  generate [--draft] [-y]\n\nOptions:\n  --config path   Configuration file (default: config/default.json)\n  --draft         Preview generation without calling a model\n  --yes, -y       Skip confirmation before a paid model request`);
+  console.log(`AI Engineering Briefing\n\nCommands:\n  sources\n  voices                   List ElevenLabs voices and IDs\n  ingest [--fixture path]\n  review [--status pending|approved|rejected]\n  approve --ids 1,2       Approve cluster IDs\n  reject --ids 3,4        Reject cluster IDs\n  generate [--date YYYY-MM-DD] [--draft] [-y]\n  synthesize [--episode directory] [--draft] [-y]\n\nOptions:\n  --config path   Configuration file (default: config/default.json)\n  --date value    Coverage end date for generation (YYYY-MM-DD)\n  --episode path  Episode directory containing script.md\n  --draft         Preview generation or synthesis without a paid request\n  --yes, -y       Skip confirmation before a paid request`);
 }
 
 function printGenerationPreview(
@@ -132,15 +171,31 @@ function printGenerationPreview(
   console.log("");
 }
 
-async function confirmGeneration(): Promise<void> {
+async function confirmPaidRequest(question: string): Promise<void> {
   if (!process.stdin.isTTY) throw new Error("Confirmation required. Re-run with --yes to make the model request.");
   const terminal = createInterface({ input: process.stdin, output: process.stdout });
   try {
-    const answer = await terminal.question("Send this material to the configured model? [y/N] ");
+    const answer = await terminal.question(`${question} [y/N] `);
     if (!/^y(es)?$/i.test(answer.trim())) throw new Error("Generation cancelled.");
   } finally {
     terminal.close();
   }
+}
+
+function currentEpisodeDirectory(config: Awaited<ReturnType<typeof loadConfig>>): string {
+  const now = new Date();
+  const date = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, "0"), String(now.getDate()).padStart(2, "0")].join("-");
+  return join(config.outputDirectory, `${date}-${config.episode.cadence}`);
+}
+
+function parseEpisodeDate(value: string): Date {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) throw new Error("Episode date must use YYYY-MM-DD format.");
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12);
+  if (date.getFullYear() !== Number(match[1]) || date.getMonth() !== Number(match[2]) - 1 || date.getDate() !== Number(match[3])) {
+    throw new Error(`Invalid episode date "${value}".`);
+  }
+  return date;
 }
 
 function lookbackDate(cadence: "weekly" | "biweekly"): Date {

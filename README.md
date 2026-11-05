@@ -23,6 +23,7 @@ Core principles:
 RSS / Atom → SQLite → Cluster and rank → Human approval
            → Provider preview → Generate and validate
            → script.md + show-notes.md + sources.json
+           → ElevenLabs preview → episode.mp3
 ```
 
 ## MVP capabilities
@@ -50,7 +51,8 @@ Product Hunt is configured but disabled because its feed is not AI-specific. TLD
 Requirements:
 
 - Docker Desktop or Docker Engine with Compose v2
-- A Gemini API key only for Gemini generation
+- A Gemini API key for Gemini generation
+- An ElevenLabs API key for MP3 synthesis
 
 Build and smoke-test the production image:
 
@@ -79,6 +81,10 @@ docker compose run --rm ainews generate --draft --config config/editorial.json
 
 # Generate intentionally in a one-shot container
 docker compose run --rm ainews generate --yes --config config/editorial.json
+
+# Preview audio cost inputs, then synthesize the reviewed script
+docker compose run --rm ainews synthesize --draft --config config/editorial.json
+docker compose run --rm ainews synthesize --yes --config config/editorial.json
 ```
 
 Omit `--yes` in an interactive terminal when you want the confirmation prompt.
@@ -106,9 +112,36 @@ Edit `.env` with no spaces around `=`:
 
 ```dotenv
 GEMINI_API_KEY=your_actual_key_here
+ELEVENLABS_API_KEY=your_actual_key_here
 ```
 
-Compose reads the root `.env` file and passes only `GEMINI_API_KEY` into the container. `.env` is ignored by Git and the Docker build context.
+Compose reads the root `.env` file and passes only the two API keys into the container. `.env` is ignored by Git and the Docker build context.
+
+## ElevenLabs voices and audio
+
+Keep the ElevenLabs key only in the ignored root `.env` file. To see the voices available to your account and their IDs:
+
+```bash
+npm run dev -- voices --config config/editorial.json
+```
+
+Choose two distinct voices, then set them in `config/editorial.json`:
+
+```json
+"audio": {
+  "hostAVoiceId": "your_host_a_voice_id",
+  "hostBVoiceId": "your_host_b_voice_id"
+}
+```
+
+Preview the number of dialogue turns and billable characters before making a request, then create the MP3:
+
+```bash
+npm run dev -- synthesize --draft --config config/editorial.json
+npm run dev -- synthesize --config config/editorial.json
+```
+
+Use `--episode output/YYYY-MM-DD-weekly` to synthesize a directory other than today's episode. The ElevenLabs model and MP3 format are inherited from `config/default.json` and can be overridden in the editorial config.
 
 The editorial config selects stable `gemini-2.5-flash`, used as a reliable fallback after newer Flash endpoints returned temporary high-demand errors. Change `model.model` in `config/editorial.json` to test another compatible Gemini model.
 
@@ -151,8 +184,16 @@ approve --ids 1,2
 reject --ids 3,4
     Apply a manual decision to clusters and their supporting stories.
 
-generate [--draft] [--yes]
+generate [--date YYYY-MM-DD] [--draft] [--yes]
     Preview or generate from approved clusters.
+
+    Use `--date` when regenerating an earlier edition so its coverage period and output directory remain stable.
+
+voices
+    List the ElevenLabs voices and IDs available to the configured account.
+
+synthesize [--episode directory] [--draft] [--yes]
+    Preview or synthesize a generated two-host script as episode.mp3.
 
 --config path
     Select configuration; defaults to config/default.json.
@@ -188,12 +229,14 @@ The generation prompt requests educational depth through definitions, engineerin
 output/YYYY-MM-DD-weekly/
 ├── script.md
 ├── show-notes.md
-└── sources.json
+├── sources.json
+└── episode.mp3
 ```
 
 - `script.md`: recording-ready dialogue
 - `show-notes.md`: sources grouped by development
 - `sources.json`: selected clusters and story metadata
+- `episode.mp3`: two-host ElevenLabs audio (after synthesis)
 
 `output/` and `data/` are intentionally ignored by Git.
 
@@ -220,9 +263,11 @@ Tests cover clustering, corroboration, database refresh, structured rendering, c
 
 ## Troubleshooting
 
-### Missing Gemini key
+### Missing API key
 
 Confirm `.env` exists at the repository root and contains `GEMINI_API_KEY=your_key`. A key change does not require rebuilding the image.
+
+For voice listing and synthesis, also confirm it contains `ELEVENLABS_API_KEY=your_key`. Never put either key in JSON configuration or source code.
 
 ### Gemini HTTP 503 or `UNAVAILABLE`
 
@@ -242,7 +287,7 @@ The result is rejected before files are written. Refresh feeds for richer conten
 
 ## Current boundaries
 
-The MVP stops at a reviewed script. Podcast transcription, YouTube captions, arbitrary page extraction, text-to-speech, distinct voices, music, visuals, publishing, a web dashboard, and semantic clustering are later stages.
+The MVP now produces a reviewed script and an optional two-voice MP3. Podcast transcription, YouTube captions, arbitrary page extraction, music, visuals, publishing, a web dashboard, and semantic clustering remain later stages.
 
 ## Development guidance
 

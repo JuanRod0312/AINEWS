@@ -20,6 +20,13 @@ const configSchema = z.object({
     provider: z.string().min(1),
     model: z.string().min(1)
   }),
+  audio: z.object({
+    provider: z.literal("elevenlabs"),
+    model: z.string().min(1),
+    outputFormat: z.literal("mp3_44100_128"),
+    hostAVoiceId: z.string(),
+    hostBVoiceId: z.string()
+  }),
   sources: z.array(z.object({
     name: z.string().min(1),
     url: z.url(),
